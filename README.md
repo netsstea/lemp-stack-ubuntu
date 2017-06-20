@@ -8,9 +8,17 @@
 		1. [Installation script](#installation-script)
 		1. [Manual installation](#manual-script)
 	1. [Webserver - PHP7.1, MariaDB, Nginx, ...](#webserver-installation)
+        1. [Install Nginx](#install-nginx)
+        1. [Install Apache instead of Nginx](#install-apache-instead-of-nginx-if-you-familier-with-apache)
+        1. [Install MariaDB](#install-mariadb)
+        1. [Install MySQL instead of MariaDB](#install-mysql-instead-of-mariadb-if-you-familier-with-mysql)
+        1. [Install PHP 7.1](#install-php71)
+        1. [Install PHP 7.1 Modules](#choose-and-install-php71-modules)
+        1. [Install Composer](#install-composer)
 	1. [Adding website](#add-new-website-configuring-php-&-nginx-&-mariadb)
 		1. [User, permissions, structure...](#create-the-dir-structure-for-new-website)		1. [PHP](#create-new-php-fpm-pool-for-new-site)
 		1. [Nginx vhost](#create-new-vhost-for-nginx)
+        1. [Apache vhost](#create-new-vhost-for-apache)
 		1. [MariaDB (MySQL)](#mariadb-mysql)
 	1. [Todo](#todo)
 	1. [Reference](#reference)
@@ -415,6 +423,11 @@ nvm use --lts
 # current latest LTS is 6.11.0
 nvm alias default 6.11.0
 ```
+### Install Composer
+```sh
+curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+```
+
 ## Todo
 
 - [ ] better description of nginx configuration
