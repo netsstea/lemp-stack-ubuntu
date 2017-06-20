@@ -1,6 +1,6 @@
 # Basic installation process of LEMP
 
-**Last update**: 4/4/2017, tested on Ubuntu 16.10
+**Last update**: 20/6/2017, tested on Ubuntu 16.04
 
 1. [Basic installation process of LEMP](#basic-installation-process-of-lemp)
 	1. [Overview](#overview)
@@ -21,56 +21,12 @@
 This document is a list of notes when installing several Ubuntu LEMP instances w/ PHP7.1. With some sort of imagination it can be considered as a step-by-step tutorial of really basic installation process of LEMP. I wrote it mainly for myself, but feel free to use it. The LEMP consists of:
 
 - Nginx
+- Apache
 - PHP7.1
 - MariaDB
-
+- MySQL
 
 ## Essentials
-
-### Installation script
-
-To automatically install essentials, you can use the 👉 `startup.sh` script by downloading it and calling it with sudo `sudo ./startup.sh`.
-The file is deleted automatically.
-
-### Manual installation
-
-If you want to have the installation in your hands, follow the manual installation. 👇
-
-#### add new user
-```sh
-adduser admin
-```
-
-
-#### allow su without password for this user
-```sh
-echo "admin    ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-```
-
-
-#### try new user
-```sh
-su - admin
-exit
-```
-
-
-#### add authorized keys for that user
-```sh
-su - admin
-mkdir .ssh
-nano .ssh/authorized_keys
-chmod 700 .ssh/
-chmod 600 .ssh/authorized_keys
-```
-
-#### disable password login for all users
-```sh
-# Optional
-# sudo echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
-# sudo systemctl reload sshd
-```
-
 
 #### Fix locale if you are getting "WARNING! Your environment specifies an invalid locale."
 ```sh
@@ -78,12 +34,10 @@ sudo echo 'LC_ALL="en_US.UTF-8"' >> /etc/environment
 # Log out & in
 ```
 
-
 ### Sett the correct timezone
 ```sh
 sudo dpkg-reconfigure tzdata
 ```
-
 
 ### Configure & Update APT
 ```sh
@@ -91,7 +45,6 @@ sudo apt-get update ; sudo apt-get upgrade
 sudo apt-get install python-software-properties
 sudo apt-get install software-properties-common
 ```
-
 
 #### Install essentials
 ```sh
@@ -119,9 +72,14 @@ sudo ufw app list
 sudo add-apt-repository ppa:nginx/development
 sudo apt-get update
 sudo apt-get install nginx
+sudo systemctl status nginx
 ```
-
-
+### Install Apache instead of Nginx (If you familier with Apache)
+```sh
+sudo apt-get update
+sudo apt-get install apache2
+sudo systemctl status apache2
+```
 ### Install MariaDB
 ```sh
 sudo apt-get install mariadb-server # Or MySQL: sudo apt-get install mysql-server
@@ -130,7 +88,12 @@ sudo mysql_install_db
 sudo service mysql start
 sudo mysql_secure_installation
 ```
-
+### Install MySQL instead of MariaDB (If you familier with MySQL)
+```sh
+sudo apt-get update
+sudo apt-get install mysql-server
+sudo mysql_secure_installation
+```
 
 ### Install PHP7.1
 ```sh
@@ -139,13 +102,16 @@ sudo apt-get update
 sudo apt-get install php7.1
 ```
 
-
 ### Choose and install PHP7.1 modules
 ```sh
 sudo apt-cache search php7.1-*
-sudo apt-get install php7.1-fpm php7.1-mysql php7.1-curl php7.1-gd php7.1-mcrypt php7.1-sqlite3 php7.1-bz2 php7.1-mbstrin php7.1-soap php7.1-xml php7.1-zip
+sudo apt-get install php7.1-fpm php7.1-mysql php7.1-curl php7.1-gd php7.1-mcrypt php7.1-sqlite3 php7.1-bz2 php7.1-mbstrin php7.1-soap php7.1-xml php7.1-zip php-imagick 
 ```
 
+### Speedup PHP with cache
+```sh
+apt-get -y install php7.1-opcache php-apcu
+```
 
 ### Check the installed PHP version
 ```sh
@@ -157,6 +123,11 @@ php -v
 sudo service nginx restart ; sudo systemctl status nginx.service
 ```
 
+### Or Restart Apache2
+```sh
+sudo service apache2 restart ; sudo systemctl status apache2
+```
+
 ## Add new website, configuring PHP & Nginx & MariaDB
 
 Steps 1. - 9. can be skipped by calling the `add-vhost.sh`. Just download `add-vhost.sh`, `chmod a+x ./add-vhost.sh` and call it `sudo ./add-vhost.sh`.
@@ -164,13 +135,13 @@ The file is deleted automatically.
 
 ### 1. Create the dir structure for new website
 ```sh
-sudo mkdir -p /var/www/vhosts/new-website.tld/{web,logs,ssl}
+sudo mkdir -p /var/www/vhosts/new-website.com/{web,logs,ssl}
 ```
 
 ### 2. User groups and roles
 ```sh
 sudo groupadd new-website
-sudo useradd -g new-website -d /var/www/vhosts/new-website.tld new-website
+sudo useradd -g new-website -d /var/www/vhosts/new-website.com new-website
 sudo passwd new-website
 ```
 
@@ -179,13 +150,13 @@ You can switch users by using `sudo su - new-website`
 
 ### 3. Update permissions
 ```sh
-sudo chown -R new-website:new-website /var/www/vhosts/new-website.tld
-sudo chmod -R 0775 /var/www/vhosts/new-website.tld
+sudo chown -R new-website:new-website /var/www/vhosts/new-website.com
+sudo chmod -R 0775 /var/www/vhosts/new-website.com
 ```
 
 ### 4. Create new PHP-FPM pool for new site
 ```sh
-sudo nano /etc/php/7.0/fpm/pool.d/new-website.tld.conf
+sudo nano /etc/php/7.0/fpm/pool.d/new-website.com.conf
 ```
 
 #### 5. Configure the new pool
@@ -236,23 +207,23 @@ ps aux | grep new-site
 
 ### 7. Create new "vhost" for Nginx
 ```sh
-sudo nano /etc/nginx/sites-available/new-site.tld
+sudo nano /etc/nginx/sites-available/new-site.com
 ```
 
-#### 8. Configure the vhost
+#### 8. Configure the Nginx vhost
 ```sh
 server {
     listen 80;
 
-    root /var/www/vhosts/new-site.tld/web;
+    root /var/www/vhosts/new-site.com/web;
     index index.php index.html index.htm;
 
-    server_name www.new-site.tld new-site.tld;
+    server_name www.new-site.com new-site.com;
 
     include /etc/nginx/conf.d/server/1-common.conf;
 
-    access_log /var/www/vhosts/new-site.tld/logs/access.log;
-    error_log /var/www/vhosts/new-site.tld/logs/error.log warn;
+    access_log /var/www/vhosts/new-site.com/logs/access.log;
+    error_log /var/www/vhosts/new-site.com/logs/error.log warn;
 
     location ~ \.php$ {
         try_files $uri $uri/ /index.php?$args;
@@ -265,14 +236,43 @@ server {
 }
 ```
 
-#### 9. Enable the new vhost
+#### 9. Enable the new Nginx vhost
 ```
 cd /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/new-site.tld new-site.tld
+sudo ln -s /etc/nginx/sites-available/new-site.com new-site.com
 sudo service nginx restart ; sudo systemctl status nginx.service
 ```
 
-### 10. MariaDB (MySQL)
+#### 10. Configure the Apache2 vhost
+```sh
+<VirtualHost *:80>
+    ServerAdmin admin@gmail.com
+    ServerName new-site.com
+    ServerAlias www.new-site.com
+
+    DocumentRoot /var/www/vhost/new-site.com/
+    <Directory />
+        Options FollowSymLinks
+        AllowOverride None
+    </Directory>
+    <Directory /var/www/vhost/new-site.com/>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        Allow from All
+        Require all granted
+    </Directory>
+</VirtualHost>
+```
+
+#### 11. Enable the new Apache2 vhost
+```
+cd /etc/apache2/sites-enabled/
+sudo ln -s /etc/apache2/sites-available/new-site.com new-site.com
+sudo service apache2 restart ; sudo systemctl status nginx.service apache2
+```
+
+### 12. MariaDB (MySQL)
 ```sh
 sudo mysql -u root -p
 > CREATE DATABASE newwebsite_tld;
@@ -404,27 +404,30 @@ If you are getting error `/usr/bin/env: ‘node’: No such file or directory` r
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 ```
 
+### Install NodeJS via NVM
+```sh
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+# Close terminal or open another terminal and then continue execute below scripts
+# Install latest LTS version of node
+nvm install --lts
+# Use LTS version as default
+nvm use --lts
+# current latest LTS is 6.11.0
+nvm alias default 6.11.0
+```
 ## Todo
-- [ ] better vhost permissions for reading for other users
+
 - [ ] better description of nginx configuration
 - [x] php-fpm settings
 - [x] munin
-- [ ] adminer
-- [ ] script for creating new vhost
-- [x] directory schema
-- [x] User groups
+- [x] script for creating new vhost
 - [x] git
-- [ ] composer
-- [ ] Let's encrypt (?)
-- [ ] Create ISO
-- [ ] NPM
-- [ ] s3cmd
+- [x] composer
+- [x] NPM and NVM
 - [ ] automysqlbackup
 - [x] postfix
-- [ ] SSH/SFTP jail? 
-    - https://www.linode.com/docs/tools-reference/tools/limiting-access-with-sftp-jails-on-debian-and-ubuntu
-    - `makejail`
-
+- [ ] automyfilebackup
+- [ ] files permissions for some PHP framework like Laravel or Symfony
 
 ## Reference
 - https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-14-04
