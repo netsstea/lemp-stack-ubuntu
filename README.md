@@ -20,6 +20,9 @@
 		1. [Nginx vhost](#create-new-vhost-for-nginx)
         1. [Apache vhost](#create-new-vhost-for-apache)
 		1. [MariaDB (MySQL)](#mariadb-mysql)
+    1. [Adding Redis and MongoDB](#adding-redis-and-mongodb)
+        1. [Redis](#redis)
+        1. [MongoDB](#mongodb)
 	1. [Todo](#todo)
 	1. [Reference](#reference)
 	1. [License](#license)
@@ -288,6 +291,106 @@ sudo mysql -u root -p
 > GRANT ALL PRIVILEGES ON newwebsite_tld.* TO 'newwebsite_tld'@'localhost';
 > FLUSH PRIVILEGES;
 ```
+
+## 13. Redis
+```sh
+sudo apt-get update
+# tcl package, which we can use to test our binaries.
+sudo apt-get install build-essential tcl
+sudo apt-get install make
+cd /tmp
+wget -O http://download.redis.io/redis-stable.tar.gz
+tar xzvf redis-3.2.9.tar.gz
+cd redis-3.2.9
+make && make test &&sudo make install
+```
+### Configure Redis
+```sh
+sudo mkdir /etc/redis
+sudo cp /tmp/redis-stable/redis.conf /etc/redis
+sudo vim /etc/redis/redis.conf
+```
+I assume we are install on linux distro so we need config Redis run as service of systemd.
+in `redis.conf ` let find `supervised` and set `supervised systemd`
+Next find the `dir` This option specifies the directory that Redis will use to dump persistent data. We need to pick a location that Redis will have write permission and that isn't viewable by normal users.
+We will use the `/var/lib/redis` directory for this, which we will create in a moment:
+```sh
+# Note that you must specify a directory here, not a file name.
+dir /var/lib/redis
+```
+### Create a Redis systemd Unit File
+```sh
+sudo vim /etc/systemd/system/redis.service
+```
+let put some content needed
+```sh
+[Unit]
+Description=Redis In-Memory Data Store
+After=network.target
+
+[Service]
+User=redis
+Group=redis
+ExecStart=/usr/local/bin/redis-server /etc/redis/redis.conf
+ExecStop=/usr/local/bin/redis-cli shutdown
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+### Create the Redis User, Group and Directories
+```sh
+sudo adduser --system --group --no-create-home redis
+sudo mkdir /var/lib/redis
+sudo chown redis:redis /var/lib/redis
+sudo chmod 770 /var/lib/redis
+```
+
+### Start and test Redis
+```sh
+sudo systemctl start redis
+sudo systemctl status redis
+```
+
+### To enable Redis to start at boot
+```sh
+sudo systemctl enable redis
+```
+
+### Install php-redis
+```sh
+sudo apt-get install php7.0-redis
+sudo phpenmod redis && sudo service apache2 restart
+```
+Or if you want to manually install php-redis
+
+```sh
+sudo git clone -b php7 https://github.com/phpredis/phpredis.git
+sudo mv phpredis/ /etc/ && cd /etc/phpredis
+sudo phpize && sudo ./configure && sudo make && sudo make install
+# depends on your php locate, it maybe /etc/php5.6 or /etc/php7.0 or /etc/php7.1 or simply /etc/php
+sudo touch /etc/php7.1/mods-available/redis.ini
+sudo echo 'extension=redis.so' > /etc/php7.1/mods-available/redis.ini
+sudo phpenmod redis && sudo service apache2 restart
+```
+
+### Install MongoDB
+```sh
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
+echo "deb [ arch=amd64,arm64 ] http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.4.list
+sudo apt-get update
+sudo apt-get install mongodb-org
+sudo systemctl start mongod
+sudo systemctl status mongod
+# start mongodb at boot
+sudo systemctl enable mongod
+```
+
+### Install php-mongo
+```sh
+sudo pecl install mongodb
+```
+and then add `extension=mongodb.so` to your `php.ini` file
 
 ## Others
 
