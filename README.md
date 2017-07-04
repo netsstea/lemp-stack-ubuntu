@@ -79,12 +79,39 @@ sudo ufw app list
 ## Webserver installation
 
 ### Install Nginx
+[Installation guide from official page](https://www.nginx.com/resources/wiki/start/topics/tutorials/install/)
+Create source file
 ```sh
-sudo add-apt-repository ppa:nginx/development
+sudo vim /etc/apt/sources.list.d/nginx.list
+```
+Put content
+```sh
+deb http://nginx.org/packages/ubuntu/ xenial nginx
+deb-src http://nginx.org/packages/ubuntu/ xenial nginx
+```
+
+```sh
 sudo apt-get update
 sudo apt-get install nginx
+```
+
+If If a W: `GPG error: http://nginx.org/packages/ubuntu xenial Release: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY $key is encountered` during the NGINX repository update, execute the following:
+```sh
+## Replace $key with the corresponding $key from your GPG error.
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $key
+sudo apt-get update
+sudo apt-get install nginx
+```
+
+Check nginx service
+```sh
 sudo systemctl status nginx
 ```
+
+If you are upgrading Ubuntu or Nginx you may have problem with masked.
+Please do the following command to remove old masked
+`sudo systemctl unmask nginx.service`
+After that you can start Nginx as usual
 ### Install Apache instead of Nginx (If you familier with Apache)
 ```sh
 sudo apt-get update
