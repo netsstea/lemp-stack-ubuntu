@@ -163,7 +163,7 @@ sudo mkdir /var/lib/redis
 ```
 We should give the redis user and group ownership over this directory:
 
-sudo chown redis:redis `/var/lib/redis`
+`sudo chown redis:redis /var/lib/redis`
 Adjust the permissions so that regular users cannot access this location:
 
 ```sh
