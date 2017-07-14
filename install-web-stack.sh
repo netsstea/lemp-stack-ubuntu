@@ -34,6 +34,25 @@ sudo apt-get install curl git unzip
 cd ~
 curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
 
+# Install php-redis
+sudo apt-get install php-pear php-dev
+sudo pecl install redis
+sudo touch /etc/php/7.0/mods-available/redis.ini
+sudo bash -c 'cat > /etc/php/7.0/mods-available/redis.ini << EOL
+extension=redis.so
+EOL'
+sudo phpenmod redis
+
+# Install php-mongodb
+sudo pecl install mongodb
+sudo touch /etc/php/7.0/mods-available/mongo.ini
+sudo bash -c 'cat > /etc/php/7.0/mods-available/mongo.ini << EOL
+extension=mongodb.so
+EOL'
+sudo phpenmod mongo
+
+sudo systemctl restart php7.0-fpm
+
 # Install Mongodb Server
 sudo apt-get install build-essential tcl
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6

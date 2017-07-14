@@ -42,18 +42,25 @@ echo "server {
 
     server_name www.$HOST.$DOMAIN $HOST.$DOMAIN;
 
-    include /etc/nginx/conf.d/server/1-common.conf;
+    location / {
+        try_files $uri $uri/ /index.php?q=$uri&$args;
+    }
 
     access_log /var/www/vhosts/$HOST.$DOMAIN/logs/access.log;
     error_log /var/www/vhosts/$HOST.$DOMAIN/logs/error.log warn;
 
     location ~ \.php$ {
-        try_files \$uri \$uri/ /index.php?$args;
-        fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass unix:/var/run/php/php7.0-fpm-$HOST.sock;
+        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;;
         fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_intercept_errors on;
         include fastcgi_params;
+
+        astcgi_cache_use_stale error timeout invalid_header http_500;
+        fastcgi_cache_key $host$request_uri;
+        fastcgi_cache_valid 200 1m;
+        fastcgi_cache_bypass $nocache;
+        fastcgi_no_cache $nocache;
     }
 }" >> /etc/nginx/sites-available/$HOST.$DOMAIN
 
