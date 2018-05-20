@@ -1,31 +1,27 @@
 read -p "Write the host name, eg. google:" HOST;
 read -p "Write the 1st level domain name without starting dot (.), eg. com.au:" DOMAIN;
-read -p "Write the link of git respository:" GITREPO;
-read -p "Where is folder index.html or index.php file located in:" INDEX;
 
-mkdir -p /var/www/vhosts/$HOST.$DOMAIN/
-cd /var/www/vhosts/$HOST.$DOMAIN/ && git clone $GITREPO && cd
-
-groupadd $HOST
-useradd -g $HOST -d /var/www/vhosts/$HOST.$DOMAIN $HOST
-passwd $HOST
-
-chown -R $HOST:$HOST /var/www/vhosts/$HOST.$DOMAIN
-chmod -R 0775 /var/www/vhosts/$HOST.$DOMAIN
+mkdir -p /var/www/$HOST.$DOMAIN/web
+mkdir -p /var/www/$HOST.$DOMAIN/logs
+mkdir -p /var/www/$HOST.$DOMAIN/ssl
 
 touch /etc/apache2/sites-available/$HOST.$DOMAIN
 
 echo "<VirtualHost *:80>
-    ServerAdmin quangdv190@gmail.com
-    ServerName $HOST.$DOMAIN
+    ServerAdmin admin@$HOST.$DOMAIN
+    ServerName $HOST.$DOMAIN www.$HOST.$DOMAIN
     ServerAlias $HOST.$DOMAIN
 
-    DocumentRoot /var/www/vhosts/$HOST.$DOMAIN/
+    ErrorLog /var/www/$HOST.$DOMAIN/logs/error.log
+    LogLevel warn
+    CustomLog /var/www/$HOST.$DOMAIN/logs/access.log combined
+    
+    DocumentRoot /var/www/$HOST.$DOMAIN/web
     <Directory />
         Options FollowSymLinks
         AllowOverride None
     </Directory>
-    <Directory /var/www/vhosts/$HOST.$DOMAIN/
+    <Directory /var/www/$HOST.$DOMAIN/web/ >
         Options Indexes FollowSymLinks MultiViews
         AllowOverride All
         Order allow,deny
@@ -34,7 +30,6 @@ echo "<VirtualHost *:80>
     </Directory>
 </VirtualHost>" >> /etc/apache2/sites-available/$HOST.$DOMAIN
 
-ln -s /etc/apache2/sites-available/$HOST.$DOMAIN /etc/apache2/sites-enabled/$HOST.$DOMAIN
-service apache2 restart ; systemctl status apache2
+ln -s /etc/apache2/sites-available/$HOST.$DOMAIN /etc/apache2/sites-enabled/$HOST.$DOMAIN.conf
 
-rm ./add-apache-vhost.sh
+service apache2 restart
