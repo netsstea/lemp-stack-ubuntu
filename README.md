@@ -9,14 +9,14 @@ Best option is go with Docker and its images.
 
 The LEMP scripts consists of:
 
-- Nginx
-- Apache
-- PHP7.2 and its dependencies
-- MariaDB
-- Composer
-- NodeJS
-- Redis
-- MongoDB
+-> Nginx
+-> Apache
+-> PHP7.2 and its dependencies
+-> MariaDB
+-> Composer
+-> NodeJS
+-> Redis
+-> MongoDB
 
 ## Scripts
 1. Full LEMP stack (Nginx + PHP7.2 + MariaDB + Redis + MongoDB + Composer)
